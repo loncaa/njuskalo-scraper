@@ -21,22 +21,27 @@ def check_site(sc):
         if not first_link in dict: #.keys
             msg = 'Pojavila se nova karta:\n' #poruka za popup
 
-            links = []
-            prices = []
+            links = [] #linkovi su junik key za artikl
+            prices = [] #cijena artikla
+            titles = [] #naziv artikla
             for a in articles:
                 h3_tags = a.find_all("h3", {"class":"entity-title"})
                 l = h3_tags[0].find_all("a")
                 p = a.find_all("strong", {"class": "price price--hrk"})
+
+                #spremanje podataka u niz
                 if p.__len__() > 0 and l.__len__() > 0:
                     links.append(l[0].attrs["href"])
                     prices.append(p[0].text)
+                    titles.append(l[0].text)
 
-            for l, p in zip(links, prices):
+            #nizovi su spojeni po indexu
+            for l, p, t in zip(links, prices, titles):
                 if not l in dict.keys():
                     time_to_message = True
                     dict[l] = p
-                    msg += (l) + ': ' + (p) + '\n'
-                    print((l) + ': ' + (p))
+                    msg += (t) + ': ' + (p) + '\n'
+                    print((t) + ': ' + (p))
                 else:
                     break
 
@@ -46,7 +51,7 @@ def check_site(sc):
         else:
             print("--")
 
-    sc.enter(2, 1, check_site, (sc,))
+    sc.enter(5*60, 1, check_site, (sc,))
 
 check_site(s)
 s.run()
