@@ -4,10 +4,12 @@ import ctypes #popup
 from datetime import datetime #prikazivanje vremena
 from threading import Thread
 from bs4 import BeautifulSoup
+import winsound
 
 s = sched.scheduler(time.time, time.sleep)
 site_http = "http://www.njuskalo.hr/index.php?ctl=search_ads&keywords=inmusic&sort=new"
 dict = dict() #dictionary ili samo {}
+
 
 def show_message(msg):
     message_box = ctypes.windll.user32.MessageBoxW
@@ -16,8 +18,16 @@ def show_message(msg):
 def check_site(sc):
     r = requests.get(site_http)
     soup = BeautifulSoup(r.content, "html.parser")
-    articles = soup.find_all("article", {"class":"entity-body"})
 
+    #pronalazi oglase koji nisu reklame
+    regulat_items = soup.find_all("li", {"class":"EntityList-item--Regular"})
+    articles = []
+
+    for ri in regulat_items:
+        ri.find_all("article", {"class":"entity-body"})
+        articles.append(ri)
+
+    #ovaj if dodati unutar for ptelje, da bude efektivnije
     if articles.__len__() > 0:
         time_to_message = False
 
@@ -25,7 +35,7 @@ def check_site(sc):
         first_link = first_h3_tag[0].find_all("a")[0].attrs["href"]
 
         if not first_link in dict: #.keys
-            msg = 'Pojavila se nova karta:\n' #poruka za popup
+            msg = ''
             for a in articles:
                 time_to_break = False
                 h3_tags = a.find_all("h3", {"class":"entity-title"})
@@ -52,6 +62,7 @@ def check_site(sc):
             if time_to_message:
                 thread = Thread(target=show_message, args=(msg,))
                 thread.start()
+                winsound.PlaySound("SystemAsterisk", winsound.SND_ALIAS)
                 #DODATI ZVUK
                 #thread.join() #čeka nit da zavrsi s radom
         else:
